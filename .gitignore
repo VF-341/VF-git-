@@ -26,3 +26,10 @@ venv/
 # Env
 .env
 .env.local
+
+# SSH keys
+id_ed25519
+id_ed25519.pub
+git
+git.pub
+*.pem
