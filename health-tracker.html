@@ -1,0 +1,2351 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康熱量管理師 - 每日熱量追蹤與健康提醒</title>
+    <style>
+        /* ===== 全域樣式 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2ecc71;
+            --primary-dark: #27ae60;
+            --primary-light: #a9dfbf;
+            --accent: #e67e22;
+            --accent-dark: #d35400;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #3498db;
+            --bg: #f0f4f8;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --border: #e0e6ed;
+            --shadow: 0 2px 16px rgba(0,0,0,0.08);
+            --shadow-hover: 0 4px 24px rgba(0,0,0,0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ===== 頂部導航 ===== */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(46, 204, 113, 0.3);
+        }
+
+        .navbar .logo {
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar .logo .icon {
+            font-size: 1.6rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-links a {
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        .nav-links a.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .nav-date {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* ===== 主容器 ===== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== 卡片 ===== */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title .emoji {
+            font-size: 1.3rem;
+        }
+
+        /* ===== 儀表板概覽 ===== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-links {
+                display: none;
+            }
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .stat-card.intake::before { background: var(--accent); }
+        .stat-card.burn::before { background: var(--info); }
+        .stat-card.balance::before { background: var(--primary); }
+
+        .stat-card .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .stat-card .stat-unit {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .stat-card.intake .stat-value { color: var(--accent); }
+        .stat-card.burn .stat-value { color: var(--info); }
+        .stat-card.balance .stat-value { color: var(--primary); }
+        .stat-card.balance.negative .stat-value { color: var(--danger); }
+
+        /* ===== 熱量環 ===== */
+        .calorie-ring-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            padding: 20px 0;
+        }
+
+        .ring-wrapper {
+            text-align: center;
+        }
+
+        .ring-wrapper svg {
+            transform: rotate(-90deg);
+        }
+
+        .ring-wrapper .ring-label {
+            margin-top: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .ring-wrapper .ring-value {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .ring-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(90deg);
+            text-align: center;
+        }
+
+        .ring-center .num {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .ring-center .lbl {
+            font-size: 0.7rem;
+            color: var(--text-light);
+        }
+
+        .ring-outer {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* ===== 表單 ===== */
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-accent:hover {
+            background: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            opacity: 0.85;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.82rem;
+        }
+
+        .btn-full {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* ===== 記錄列表 ===== */
+        .record-list {
+            list-style: none;
+        }
+
+        .record-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            background: #f8fafc;
+            transition: background 0.2s;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .record-item:hover {
+            background: #eef2f7;
+        }
+
+        .record-item .record-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .record-item .record-icon {
+            font-size: 1.2rem;
+        }
+
+        .record-item .record-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .record-item .record-time {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .record-item .record-calories {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .record-item .record-calories.intake { color: var(--accent); }
+        .record-item .record-calories.burn { color: var(--info); }
+
+        .record-item .delete-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .record-item .delete-btn:hover {
+            color: var(--danger);
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state .emoji {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        /* ===== 進度條 ===== */
+        .progress-bar-container {
+            background: #e8ecf1;
+            border-radius: 20px;
+            height: 12px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.5s ease;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+        }
+
+        .progress-bar-fill.over {
+            background: linear-gradient(90deg, var(--warning), var(--danger));
+        }
+
+        .progress-bar-fill.water {
+            background: linear-gradient(90deg, var(--info), #5dade2);
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        /* ===== 健康提醒卡片 ===== */
+        .reminder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .reminder-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s;
+        }
+
+        .reminder-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .reminder-card.water { border-left-color: var(--info); }
+        .reminder-card.exercise { border-left-color: var(--accent); }
+        .reminder-card.sleep { border-left-color: #8e44ad; }
+        .reminder-card.meal { border-left-color: var(--warning); }
+        .reminder-card.posture { border-left-color: #1abc9c; }
+        .reminder-card.mental { border-left-color: #e74c3c; }
+
+        .reminder-card .reminder-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .reminder-card .reminder-icon {
+            font-size: 1.8rem;
+        }
+
+        .reminder-card .reminder-title {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .reminder-card .reminder-text {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .reminder-card .reminder-status {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .reminder-card .status-badge {
+            font-size: 0.72rem;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.good { background: #e8f8f0; color: var(--primary-dark); }
+        .status-badge.warning { background: #fef5e7; color: var(--warning); }
+        .status-badge.danger { background: #fdedec; color: var(--danger); }
+
+        /* ===== 食物資料庫快速選擇 ===== */
+        .quick-select {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .quick-chip {
+            background: #f0f4f8;
+            border: 2px solid transparent;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .quick-chip:hover {
+            border-color: var(--accent);
+            background: #fef5e7;
+        }
+
+        .quick-chip .chip-cal {
+            font-size: 0.72rem;
+            color: var(--text-light);
+            margin-left: 4px;
+        }
+
+        /* ===== 活動資料庫快速選擇 ===== */
+        .quick-chip.activity:hover {
+            border-color: var(--info);
+            background: #ebf5fb;
+        }
+
+        /* ===== 個人資料設定 ===== */
+        .profile-summary {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: linear-gradient(135deg, #e8f8f0, #f0f4f8);
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .profile-info .profile-name {
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .profile-info .profile-detail {
+            font-size: 0.82rem;
+            color: var(--text-light);
+        }
+
+        /* ===== Toast 通知 ===== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--card-bg);
+            border-radius: var(--radius-sm);
+            padding: 14px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            animation: toastIn 0.3s ease;
+            border-left: 4px solid var(--primary);
+            max-width: 360px;
+        }
+
+        .toast.success { border-left-color: var(--primary); }
+        .toast.warning { border-left-color: var(--warning); }
+        .toast.danger { border-left-color: var(--danger); }
+        .toast.info { border-left-color: var(--info); }
+
+        .toast.fade-out {
+            animation: toastOut 0.3s ease forwards;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(40px); }
+        }
+
+        /* ===== 飲水追蹤 ===== */
+        .water-tracker {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .water-cups {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .water-cup {
+            width: 36px;
+            height: 44px;
+            border: 2px solid var(--info);
+            border-radius: 0 0 8px 8px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .water-cup::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 0%;
+            background: linear-gradient(180deg, #5dade2, var(--info));
+            transition: height 0.3s ease;
+        }
+
+        .water-cup.filled::before {
+            height: 80%;
+        }
+
+        .water-cup:hover {
+            transform: scale(1.1);
+        }
+
+        .water-cup .cup-emoji {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1rem;
+            z-index: 1;
+        }
+
+        /* ===== 圖表區域 ===== */
+        .chart-container {
+            position: relative;
+            padding: 10px 0;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 180px;
+            padding: 10px 0;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            height: 100%;
+            justify-content: flex-end;
+        }
+
+        .bar-stack {
+            display: flex;
+            flex-direction: column-reverse;
+            width: 100%;
+            max-width: 50px;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+        }
+
+        .bar {
+            width: 100%;
+            border-radius: 4px 4px 0 0;
+            transition: height 0.5s ease;
+            min-height: 2px;
+            position: relative;
+        }
+
+        .bar.intake-bar {
+            background: linear-gradient(180deg, var(--accent), #f0c36d);
+        }
+
+        .bar.burn-bar {
+            background: linear-gradient(180deg, var(--info), #5dade2);
+        }
+
+        .bar-label {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        /* ===== Modal ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 28px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* ===== 每日建議 ===== */
+        .tips-list {
+            list-style: none;
+        }
+
+        .tips-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .tips-list li:last-child {
+            border-bottom: none;
+        }
+
+        .tips-list .tip-icon {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .tips-list .tip-text {
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .tips-list .tip-text strong {
+            color: var(--primary-dark);
+        }
+
+        /* ===== 頁腳 ===== */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+
+        /* ===== 工具列 ===== */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .toolbar .toolbar-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .section-header {
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-header p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        /* ===== 響應式 ===== */
+        @media (max-width: 600px) {
+            .container { padding: 16px; }
+            .form-row { flex-direction: column; }
+            .calorie-ring-container { gap: 20px; }
+            .navbar { padding: 0 12px; }
+            .nav-date { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== 導航欄 ===== -->
+<nav class="navbar">
+    <div class="logo">
+        <span class="icon">🌿</span>
+        <span>健康熱量管理師</span>
+    </div>
+    <div class="nav-links">
+        <a class="nav-link active" data-section="dashboard">📊 儀表板</a>
+        <a class="nav-link" data-section="intake">🍽️ 熱量攝入</a>
+        <a class="nav-link" data-section="burn">🔥 熱量消耗</a>
+        <a class="nav-link" data-section="reminders">⏰ 健康提醒</a>
+        <a class="nav-link" data-section="profile">⚙️ 個人設定</a>
+    </div>
+    <div class="nav-date" id="navDate"></div>
+</nav>
+
+<div class="container">
+
+    <!-- ===== 儀表板 ===== -->
+    <div class="section active" id="section-dashboard">
+        <div class="section-header">
+            <h2>📊 今日儀表板</h2>
+            <p>掌握你每日的熱量平衡與健康狀態</p>
+        </div>
+
+        <!-- 個人資料摘要 -->
+        <div id="profileSummaryDashboard"></div>
+
+        <!-- 統計卡片 -->
+        <div class="dashboard-grid">
+            <div class="stat-card intake">
+                <div class="stat-icon">🍽️</div>
+                <div class="stat-label">今日攝入熱量</div>
+                <div class="stat-value" id="totalIntake">0</div>
+                <div class="stat-unit">kcal</div>
+            </div>
+            <div class="stat-card burn">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-label">今日消耗熱量</div>
+                <div class="stat-value" id="totalBurn">0</div>
+                <div class="stat-unit">kcal</div>
+            </div>
+            <div class="stat-card balance" id="balanceCard">
+                <div class="stat-icon">⚖️</div>
+                <div class="stat-label">熱量平衡</div>
+                <div class="stat-value" id="calorieBalance">0</div>
+                <div class="stat-unit">kcal</div>
+            </div>
+        </div>
+
+        <!-- 熱量環 + 進度條 -->
+        <div class="card">
+            <div class="card-title"><span class="emoji">🎯</span> 每日目標達成率</div>
+            <div class="calorie-ring-container">
+                <div class="ring-outer">
+                    <div class="ring-wrapper">
+                        <svg width="140" height="140">
+                            <circle cx="70" cy="70" r="60" fill="none" stroke="#e8ecf1" stroke-width="12"/>
+                            <circle id="intakeRing" cx="70" cy="70" r="60" fill="none" stroke="#e67e22" stroke-width="12" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377" style="transition: stroke-dashoffset 0.6s ease;"/>
+                        </svg>
+                        <div class="ring-center" style="transform: translate(-50%,-50%);">
+                            <div class="num" id="intakeRingNum" style="color:#e67e22;">0%</div>
+                            <div class="lbl">攝入達成</div>
+                        </div>
+                    </div>
+                    <div class="ring-label">🍽️ 攝入熱量</div>
+                    <div class="ring-value" id="intakeRingText">0 / 0 kcal</div>
+                </div>
+
+                <div class="ring-outer">
+                    <div class="ring-wrapper">
+                        <svg width="140" height="140">
+                            <circle cx="70" cy="70" r="60" fill="none" stroke="#e8ecf1" stroke-width="12"/>
+                            <circle id="burnRing" cx="70" cy="70" r="60" fill="none" stroke="#3498db" stroke-width="12" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377" style="transition: stroke-dashoffset 0.6s ease;"/>
+                        </svg>
+                        <div class="ring-center" style="transform: translate(-50%,-50%);">
+                            <div class="num" id="burnRingNum" style="color:#3498db;">0%</div>
+                            <div class="lbl">消耗達成</div>
+                        </div>
+                    </div>
+                    <div class="ring-label">🔥 消耗熱量</div>
+                    <div class="ring-value" id="burnRingText">0 / 0 kcal</div>
+                </div>
+
+                <div class="ring-outer">
+                    <div class="ring-wrapper">
+                        <svg width="140" height="140">
+                            <circle cx="70" cy="70" r="60" fill="none" stroke="#e8ecf1" stroke-width="12"/>
+                            <circle id="waterRing" cx="70" cy="70" r="60" fill="none" stroke="#3498db" stroke-width="12" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377" style="transition: stroke-dashoffset 0.6s ease;"/>
+                        </svg>
+                        <div class="ring-center" style="transform: translate(-50%,-50%);">
+                            <div class="num" id="waterRingNum" style="color:#3498db;">0%</div>
+                            <div class="lbl">飲水達成</div>
+                        </div>
+                    </div>
+                    <div class="ring-label">💧 飲水量</div>
+                    <div class="ring-value" id="waterRingText">0 / 2000 ml</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 一週趨勢圖 -->
+        <div class="card">
+            <div class="card-title"><span class="emoji">📈</span> 近七日熱量趨勢</div>
+            <div class="chart-container">
+                <div class="bar-chart" id="weeklyChart"></div>
+                <div class="chart-legend">
+                    <div class="legend-item"><div class="legend-dot" style="background:#e67e22;"></div> 攝入熱量</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#3498db;"></div> 消耗熱量</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 今日建議 -->
+        <div class="card">
+            <div class="card-title"><span class="emoji">💡</span> 今日健康建議</div>
+            <ul class="tips-list" id="dailyTips">
+            </ul>
+        </div>
+    </div>
+
+    <!-- ===== 熱量攝入 ===== -->
+    <div class="section" id="section-intake">
+        <div class="section-header">
+            <h2>🍽️ 熱量攝入追蹤</h2>
+            <p>記錄你今日所吃的食物，掌握攝入熱量</p>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span class="emoji">⚡</span> 快速選擇常見食物</div>
+            <div class="quick-select" id="foodQuickSelect"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span class="emoji">➕</span> 新增食物記錄</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>食物名稱</label>
+                    <input type="text" id="foodName" placeholder="例如：白飯一碗">
+                </div>
+                <div class="form-group" style="max-width:180px;">
+                    <label>熱量 (kcal)</label>
+                    <input type="number" id="foodCalories" placeholder="200" min="0">
+                </div>
+                <div class="form-group" style="max-width:140px;">
+                    <label>份量</label>
+                    <input type="number" id="foodAmount" value="1" min="0.5" step="0.5">
+                </div>
+            </div>
+            <button class="btn btn-accent btn-full" onclick="addFood()">🍽️ 新增食物記錄</button>
+        </div>
+
+        <div class="card">
+            <div class="toolbar">
+                <div class="toolbar-title">📋 今日食物記錄</div>
+                <div style="font-size:0.9rem; color:var(--text-light);">
+                    合計：<strong id="intakeListTotal" style="color:var(--accent);">0 kcal</strong>
+                </div>
+            </div>
+            <ul class="record-list" id="foodList">
+                <li class="empty-state">
+                    <div class="emoji">🍽️</div>
+                    <p>尚未記錄任何食物，快開始記錄吧！</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ===== 熱量消耗 ===== -->
+    <div class="section" id="section-burn">
+        <div class="section-header">
+            <h2>🔥 熱量消耗追蹤</h2>
+            <p>記錄你的運動活動，了解每日熱量消耗</p>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span class="emoji">📊</span> 基礎代謝率 (BMR)</div>
+            <div id="bmrDisplay" style="text-align:center; padding:10px 0;">
+                <div style="font-size:0.85rem; color:var(--text-light);">請先在「個人設定」填寫資料以計算 BMR</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span class="emoji">⚡</span> 快速選擇運動活動</div>
+            <div class="quick-select" id="activityQuickSelect"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span class="emoji">➕</span> 新增運動記錄</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>活動名稱</label>
+                    <input type="text" id="activityName" placeholder="例如：慢跑">
+                </div>
+                <div class="form-group" style="max-width:180px;">
+                    <label>消耗熱量 (kcal)</label>
+                    <input type="number" id="activityCalories" placeholder="300" min="0">
+                </div>
+                <div class="form-group" style="max-width:140px;">
+                    <label>時長 (分鐘)</label>
+                    <input type="number" id="activityDuration" placeholder="30" min="1">
+                </div>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="addActivity()">🔥 新增運動記錄</button>
+        </div>
+
+        <div class="card">
+            <div class="toolbar">
+                <div class="toolbar-title">📋 今日運動記錄</div>
+                <div style="font-size:0.9rem; color:var(--text-light);">
+                    合計：<strong id="burnListTotal" style="color:var(--info);">0 kcal</strong>
+                </div>
+            </div>
+            <ul class="record-list" id="activityList">
+                <li class="empty-state">
+                    <div class="emoji">🔥</div>
+                    <p>尚未記錄任何運動，動起來吧！</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ===== 健康提醒 ===== -->
+    <div class="section" id="section-reminders">
+        <div class="section-header">
+            <h2>⏰ 健康生活提醒</h2>
+            <p>根據你的數據提供個人化健康建議與提醒</p>
+        </div>
+
+        <!-- 飲水追蹤 -->
+        <div class="card">
+            <div class="card-title"><span class="emoji">💧</span> 每日飲水追蹤</div>
+            <div class="water-tracker">
+                <div class="water-cups" id="waterCups"></div>
+                <div style="flex:1; min-width:200px;">
+                    <div class="progress-label">
+                        <span>飲水進度</span>
+                        <span id="waterProgressText">0 / 2000 ml</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill water" id="waterProgressBar" style="width:0%;"></div>
+                    </div>
+                    <div style="margin-top:10px; display:flex; gap:8px;">
+                        <button class="btn btn-sm" style="background:var(--info); color:white;" onclick="addWater(250)">+ 250ml 一杯</button>
+                        <button class="btn btn-sm btn-outline" onclick="resetWater()">重置</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 久坐提醒 -->
+        <div class="card">
+            <div class="card-title"><span class="emoji">🪑</span> 久坐提醒計時器</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <div style="font-size:0.85rem; color:var(--text-light);">每 60 分鐘提醒起身活動</div>
+                    <div id="sitTimerDisplay" style="font-size:1.6rem; font-weight:700; margin-top:6px;">--:--</div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-sm btn-primary" id="sitTimerBtn" onclick="toggleSitTimer()">開始計時</button>
+                    <button class="btn btn-sm btn-outline" onclick="resetSitTimer()">重置</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 健康提醒卡片 -->
+        <div class="reminder-grid" id="reminderGrid"></div>
+
+        <!-- 每日健康建議 -->
+        <div class="card">
+            <div class="card-title"><span class="emoji">🌟</span> 每日健康生活小貼士</div>
+            <ul class="tips-list" id="healthTips"></ul>
+        </div>
+    </div>
+
+    <!-- ===== 個人設定 ===== -->
+    <div class="section" id="section-profile">
+        <div class="section-header">
+            <h2>⚙️ 個人資料設定</h2>
+            <p>設定你的個人資料以獲得準確的熱量建議</p>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span class="emoji">📝</span> 基本資料</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>性別</label>
+                    <select id="profileGender">
+                        <option value="male">男性</option>
+                        <option value="female">女性</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>年齡</label>
+                    <input type="number" id="profileAge" placeholder="25" min="1" max="120">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>身高 (cm)</label>
+                    <input type="number" id="profileHeight" placeholder="170" min="50" max="250">
+                </div>
+                <div class="form-group">
+                    <label>體重 (kg)</label>
+                    <input type="number" id="profileWeight" placeholder="65" min="20" max="300">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>活動量等級</label>
+                <select id="profileActivity">
+                    <option value="1.2">久坐不動（辦公室工作，無運動習慣）</option>
+                    <option value="1.375">輕度活動（每週運動 1-3 次）</option>
+                    <option value="1.55">中度活動（每週運動 3-5 次）</option>
+                    <option value="1.725">高度活動（每週運動 6-7 次）</option>
+                    <option value="1.9">極度活動（體力工作者或每日訓練）</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>目標</label>
+                <select id="profileGoal">
+                    <option value="maintain">維持體重</option>
+                    <option value="lose">減重（每日赤字 500 kcal）</option>
+                    <option value="gain">增重（每日盈餘 500 kcal）</option>
+                </select>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="saveProfile()">💾 儲存個人資料</button>
+        </div>
+
+        <div class="card" id="bmrResultCard" style="display:none;">
+            <div class="card-title"><span class="emoji">📊</span> 熱量需求分析</div>
+            <div id="bmrResultContent"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span class="emoji">🗑️</span> 資料管理</div>
+            <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:14px;">
+                清除所有本地儲存的資料（食物記錄、運動記錄、個人資料等）。此操作無法復原。
+            </p>
+            <button class="btn btn-danger" onclick="confirmClearData()">🗑️ 清除所有資料</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>🌿 健康熱量管理師 — 關注你的每一卡路里 | 資料儲存於本地瀏覽器</p>
+        <p style="margin-top:4px;">※ 本工具僅供參考，實際熱量需求請諮詢專業營養師</p>
+    </div>
+</div>
+
+<!-- ===== Toast 容器 ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== 確認 Modal ===== -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+        <div class="modal-title" id="confirmTitle">確認</div>
+        <p id="confirmMessage" style="color:var(--text-light);">確定要執行此操作嗎？</p>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="closeConfirm()">取消</button>
+            <button class="btn btn-danger" id="confirmOkBtn">確定</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ========================================
+// 資料結構與常數
+// ========================================
+
+const FOOD_DATABASE = [
+    { name: '白飯一碗', cal: 280, icon: '🍚' },
+    { name: '麵條一碗', cal: 350, icon: '🍜' },
+    { name: '饅頭一個', cal: 220, icon: '🥟' },
+    { name: '吐司一片', cal: 80, icon: '🍞' },
+    { name: '雞蛋一顆', cal: 75, icon: '🥚' },
+    { name: '牛奶一杯', cal: 150, icon: '🥛' },
+    { name: '豆漿一杯', cal: 120, icon: '🥤' },
+    { name: '雞胸肉100g', cal: 165, icon: '🍗' },
+    { name: '豬肉100g', cal: 250, icon: '🥩' },
+    { name: '魚肉100g', cal: 120, icon: '🐟' },
+    { name: '豆腐一塊', cal: 80, icon: '🧈' },
+    { name: '蔬菜一份', cal: 50, icon: '🥬' },
+    { name: '蘋果一個', cal: 95, icon: '🍎' },
+    { name: '香蕉一根', cal: 105, icon: '🍌' },
+    { name: '橙一個', cal: 62, icon: '🍊' },
+    { name: '一碗拉麵', cal: 550, icon: '🍜' },
+    { name: '漢堡一個', cal: 550, icon: '🍔' },
+    { name: '薯條一份', cal: 365, icon: '🍟' },
+    { name: '披薩一片', cal: 285, icon: '🍕' },
+    { name: '壽司六貫', cal: 250, icon: '🍣' },
+    { name: '炒飯一碗', cal: 525, icon: '🍳' },
+    { name: '咖啡一杯', cal: 5, icon: '☕' },
+    { name: '珍珠奶茶', cal: 350, icon: '🧋' },
+    { name: '巧克力一塊', cal: 145, icon: '🍫' },
+    { name: '餅乾三片', cal: 160, icon: '🍪' },
+    { name: '蛋糕一片', cal: 235, icon: '🍰' },
+];
+
+const ACTIVITY_DATABASE = [
+    { name: '慢跑', calPerMin: 10, icon: '🏃' },
+    { name: '快走', calPerMin: 5, icon: '🚶' },
+    { name: '游泳', calPerMin: 11, icon: '🏊' },
+    { name: '騎單車', calPerMin: 8, icon: '🚴' },
+    { name: '跳繩', calPerMin: 13, icon: '🤸' },
+    { name: '瑜伽', calPerMin: 4, icon: '🧘' },
+    { name: '重量訓練', calPerMin: 7, icon: '🏋️' },
+    { name: '籃球', calPerMin: 9, icon: '🏀' },
+    { name: '羽毛球', calPerMin: 8, icon: '🏸' },
+    { name: '乒乓球', calPerMin: 5, icon: '🏓' },
+    { name: '足球', calPerMin: 10, icon: '⚽' },
+    { name: '網球', calPerMin: 9, icon: '🎾' },
+    { name: '跳舞', calPerMin: 7, icon: '💃' },
+    { name: '爬山', calPerMin: 9, icon: '🥾' },
+    { name: '划船', calPerMin: 10, icon: '🚣' },
+    { name: '上樓梯', calPerMin: 8, icon: '🪜' },
+    { name: '太極拳', calPerMin: 5, icon: '🥋' },
+    { name: '高爾夫', calPerMin: 5, icon: '⛳' },
+];
+
+const HEALTH_TIPS = [
+    { icon: '💧', text: '<strong>多喝水</strong>：每日建議飲水量為體重 × 30ml，分多次飲用，不要等到口渴才喝。' },
+    { icon: '🥗', text: '<strong>均衡飲食</strong>：每餐應包含蛋白質、碳水化合物、膳食纖維和健康脂肪，避免單一食物。' },
+    { icon: '🏃', text: '<strong>規律運動</strong>：每週至少進行 150 分鐘中等強度有氧運動，或 75 分鐘高強度運動。' },
+    { icon: '😴', text: '<strong>充足睡眠</strong>：成年人每日建議睡 7-9 小時，良好的睡眠有助於代謝與恢復。' },
+    { icon: '🪑', text: '<strong>避免久坐</strong>：每坐 60 分鐘應起身活動 5 分鐘，減少久坐對健康的危害。' },
+    { icon: '🧘', text: '<strong>壓力管理</strong>：透過冥想、深呼吸或散步來紓壓，慢性壓力會影響食慾與代謝。' },
+    { icon: '🌞', text: '<strong>適量日曬</strong>：每日曬太陽 15-20 分鐘，有助於維生素 D 合成，促進鈣吸收。' },
+    { icon: '📱', text: '<strong>減少屏幕時間</strong>：睡前 1 小時避免使用電子產品，有助於改善睡眠品質。' },
+    { icon: '🥣', text: '<strong>細嚼慢嚥</strong>：每口食物咀嚼 20-30 次，有助消化並增加飽足感。' },
+    { icon: '🚫', text: '<strong>減少加工食品</strong>：選擇天然原型食物，減少高糖、高鹽、高油加工食品的攝入。' },
+];
+
+// ========================================
+// 狀態管理
+// ========================================
+
+let state = {
+    profile: null,
+    foodRecords: [],
+    activityRecords: [],
+    water: 0,
+    waterGoal: 2000,
+    history: {},
+    sitTimerRunning: false,
+    sitTimerStart: null,
+    sitTimerInterval: null,
+};
+
+// ========================================
+// LocalStorage 存取
+// ========================================
+
+const STORAGE_KEY = 'healthTrackerData';
+
+function saveState() {
+    const data = {
+        profile: state.profile,
+        foodRecords: state.foodRecords,
+        activityRecords: state.activityRecords,
+        water: state.water,
+        waterGoal: state.waterGoal,
+        history: state.history,
+        date: getTodayKey(),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadState() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+
+    try {
+        const data = JSON.parse(raw);
+        // 如果日期不同，將昨日數據存入 history 並重置
+        const today = getTodayKey();
+        if (data.date && data.date !== today) {
+            // 歸檔昨日數據
+            if (data.date) {
+                state.history[data.date] = {
+                    intake: (data.foodRecords || []).reduce((s, r) => s + r.calories * r.amount, 0),
+                    burn: (data.activityRecords || []).reduce((s, r) => s + r.calories, 0) + getBMR(data.profile),
+                    water: data.water || 0,
+                };
+            }
+            state.foodRecords = [];
+            state.activityRecords = [];
+            state.water = 0;
+        } else {
+            state.foodRecords = data.foodRecords || [];
+            state.activityRecords = data.activityRecords || [];
+            state.water = data.water || 0;
+            state.waterGoal = data.waterGoal || 2000;
+        }
+        state.profile = data.profile || null;
+        state.history = data.history || {};
+    } catch(e) {
+        console.error('載入資料失敗', e);
+    }
+}
+
+function getTodayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ========================================
+// BMR 計算
+// ========================================
+
+function getBMR(profile) {
+    if (!profile || !profile.age || !profile.height || !profile.weight) return 0;
+    // Mifflin-St Jeor 公式
+    const base = 10 * profile.weight + 6.25 * profile.height - 5 * profile.age;
+    return Math.round(profile.gender === 'male' ? base + 5 : base - 161);
+}
+
+function getTDEE(profile) {
+    const bmr = getBMR(profile);
+    if (!bmr || !profile.activity) return 0;
+    return Math.round(bmr * profile.activity);
+}
+
+function getDailyGoal(profile) {
+    const tdee = getTDEE(profile);
+    if (!tdee) return 0;
+    if (profile.goal === 'lose') return tdee - 500;
+    if (profile.goal === 'gain') return tdee + 500;
+    return tdee;
+}
+
+function getDailyBurnGoal(profile) {
+    return getTDEE(profile);
+}
+
+// ========================================
+// 導航
+// ========================================
+
+document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = link.dataset.section;
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById('section-' + target).classList.add('active');
+        if (target === 'dashboard') renderDashboard();
+        if (target === 'intake') renderFoodList();
+        if (target === 'burn') renderActivityList();
+        if (target === 'reminders') renderReminders();
+        if (target === 'profile') renderProfile();
+    });
+});
+
+// ========================================
+// Toast 通知
+// ========================================
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    const icons = { success: '✅', warning: '⚠️', danger: '❌', info: 'ℹ️' };
+    toast.innerHTML = `<span style="font-size:1.2rem;">${icons[type] || '✅'}</span> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ========================================
+// 確認 Modal
+// ========================================
+
+function showConfirm(title, message, callback) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmModal').classList.add('show');
+    const btn = document.getElementById('confirmOkBtn');
+    btn.onclick = () => {
+        closeConfirm();
+        callback();
+    };
+}
+
+function closeConfirm() {
+    document.getElementById('confirmModal').classList.remove('show');
+}
+
+// ========================================
+// 食物記錄
+// ========================================
+
+function addFood(name, calories, amount) {
+    name = name || document.getElementById('foodName').value.trim();
+    calories = calories || parseFloat(document.getElementById('foodCalories').value);
+    amount = amount || parseFloat(document.getElementById('foodAmount').value) || 1;
+
+    if (!name || !calories || calories <= 0) {
+        showToast('請輸入食物名稱和熱量', 'warning');
+        return;
+    }
+
+    const record = {
+        id: Date.now(),
+        name,
+        calories,
+        amount,
+        icon: getFoodIcon(name),
+        time: new Date().toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    state.foodRecords.push(record);
+    saveState();
+    renderFoodList();
+    renderDashboard();
+
+    // 清空表單
+    document.getElementById('foodName').value = '';
+    document.getElementById('foodCalories').value = '';
+    document.getElementById('foodAmount').value = '1';
+
+    showToast(`已記錄：${name} (${Math.round(calories * amount)} kcal)`, 'success');
+}
+
+function getFoodIcon(name) {
+    const found = FOOD_DATABASE.find(f => f.name.includes(name) || name.includes(f.name));
+    return found ? found.icon : '🍽️';
+}
+
+function deleteFood(id) {
+    state.foodRecords = state.foodRecords.filter(r => r.id !== id);
+    saveState();
+    renderFoodList();
+    renderDashboard();
+    showToast('已刪除食物記錄', 'info');
+}
+
+function renderFoodList() {
+    const list = document.getElementById('foodList');
+    const total = state.foodRecords.reduce((s, r) => s + r.calories * r.amount, 0);
+
+    document.getElementById('intakeListTotal').textContent = Math.round(total) + ' kcal';
+
+    if (state.foodRecords.length === 0) {
+        list.innerHTML = `<li class="empty-state"><div class="emoji">🍽️</div><p>尚未記錄任何食物，快開始記錄吧！</p></li>`;
+        return;
+    }
+
+    list.innerHTML = state.foodRecords.map(r => `
+        <li class="record-item">
+            <div class="record-info">
+                <span class="record-icon">${r.icon}</span>
+                <div>
+                    <div class="record-name">${r.name} ${r.amount > 1 ? `×${r.amount}` : ''}</div>
+                    <div class="record-time">⏰ ${r.time}</div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span class="record-calories intake">+${Math.round(r.calories * r.amount)} kcal</span>
+                <button class="delete-btn" onclick="deleteFood(${r.id})">✕</button>
+            </div>
+        </li>
+    `).join('');
+}
+
+function renderFoodQuickSelect() {
+    const container = document.getElementById('foodQuickSelect');
+    container.innerHTML = FOOD_DATABASE.map(f => `
+        <div class="quick-chip" onclick="quickAddFood('${f.name}', ${f.cal})">
+            ${f.icon} ${f.name}<span class="chip-cal">${f.cal} kcal</span>
+        </div>
+    `).join('');
+}
+
+function quickAddFood(name, cal) {
+    addFood(name, cal, 1);
+}
+
+// ========================================
+// 運動記錄
+// ========================================
+
+function addActivity(name, calories, duration) {
+    name = name || document.getElementById('activityName').value.trim();
+    calories = calories || parseFloat(document.getElementById('activityCalories').value);
+    duration = duration || parseInt(document.getElementById('activityDuration').value) || 0;
+
+    if (!name || !calories || calories <= 0) {
+        showToast('請輸入活動名稱和消耗熱量', 'warning');
+        return;
+    }
+
+    const record = {
+        id: Date.now(),
+        name,
+        calories,
+        duration,
+        icon: getActivityIcon(name),
+        time: new Date().toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    state.activityRecords.push(record);
+    saveState();
+    renderActivityList();
+    renderDashboard();
+
+    // 清空表單
+    document.getElementById('activityName').value = '';
+    document.getElementById('activityCalories').value = '';
+    document.getElementById('activityDuration').value = '';
+
+    showToast(`已記錄：${name} (-${calories} kcal)`, 'success');
+}
+
+function getActivityIcon(name) {
+    const found = ACTIVITY_DATABASE.find(a => a.name.includes(name) || name.includes(a.name));
+    return found ? found.icon : '🔥';
+}
+
+function deleteActivity(id) {
+    state.activityRecords = state.activityRecords.filter(r => r.id !== id);
+    saveState();
+    renderActivityList();
+    renderDashboard();
+    showToast('已刪除運動記錄', 'info');
+}
+
+function renderActivityList() {
+    const list = document.getElementById('activityList');
+    const total = state.activityRecords.reduce((s, r) => s + r.calories, 0);
+
+    document.getElementById('burnListTotal').textContent = Math.round(total) + ' kcal';
+
+    // BMR 顯示
+    renderBMRDisplay();
+
+    if (state.activityRecords.length === 0) {
+        list.innerHTML = `<li class="empty-state"><div class="emoji">🔥</div><p>尚未記錄任何運動，動起來吧！</p></li>`;
+        return;
+    }
+
+    list.innerHTML = state.activityRecords.map(r => `
+        <li class="record-item">
+            <div class="record-info">
+                <span class="record-icon">${r.icon}</span>
+                <div>
+                    <div class="record-name">${r.name}${r.duration ? ` (${r.duration} 分鐘)` : ''}</div>
+                    <div class="record-time">⏰ ${r.time}</div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span class="record-calories burn">-${r.calories} kcal</span>
+                <button class="delete-btn" onclick="deleteActivity(${r.id})">✕</button>
+            </div>
+        </li>
+    `).join('');
+}
+
+function renderBMRDisplay() {
+    const display = document.getElementById('bmrDisplay');
+    const bmr = getBMR(state.profile);
+    const tdee = getTDEE(state.profile);
+
+    if (!bmr) {
+        display.innerHTML = `<div style="font-size:0.85rem; color:var(--text-light);">請先在「個人設定」填寫資料以計算 BMR</div>`;
+        return;
+    }
+
+    display.innerHTML = `
+        <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
+            <div>
+                <div style="font-size:0.8rem; color:var(--text-light);">基礎代謝率 BMR</div>
+                <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">${bmr}</div>
+                <div style="font-size:0.75rem; color:var(--text-light);">kcal / 天</div>
+            </div>
+            <div>
+                <div style="font-size:0.8rem; color:var(--text-light);">每日總消耗 TDEE</div>
+                <div style="font-size:1.8rem; font-weight:800; color:var(--info);">${tdee}</div>
+                <div style="font-size:0.75rem; color:var(--text-light);">kcal / 天</div>
+            </div>
+        </div>
+    `;
+}
+
+function renderActivityQuickSelect() {
+    const container = document.getElementById('activityQuickSelect');
+    container.innerHTML = ACTIVITY_DATABASE.map(a => `
+        <div class="quick-chip activity" onclick="quickAddActivity('${a.name}', ${a.calPerMin})">
+            ${a.icon} ${a.name}<span class="chip-cal">${a.calPerMin} kcal/分</span>
+        </div>
+    `).join('');
+}
+
+function quickAddActivity(name, calPerMin) {
+    const duration = 30; // 預設 30 分鐘
+    const calories = Math.round(calPerMin * duration);
+    addActivity(name, calories, duration);
+}
+
+// ========================================
+// 飲水追蹤
+// ========================================
+
+function addWater(amount) {
+    state.water = Math.min(state.water + amount, 5000);
+    saveState();
+    renderWaterTracker();
+    renderDashboard();
+
+    if (state.water >= state.waterGoal) {
+        showToast(`🎉 今日飲水目標已達成！(${state.water} ml)`, 'success');
+    } else {
+        showToast(`已記錄 +${amount}ml (共 ${state.water}ml)`, 'info');
+    }
+}
+
+function resetWater() {
+    state.water = 0;
+    saveState();
+    renderWaterTracker();
+    renderDashboard();
+    showToast('飲水記錄已重置', 'info');
+}
+
+function renderWaterTracker() {
+    const cups = document.getElementById('waterCups');
+    const cupCount = Math.ceil(state.waterGoal / 250);
+    const filledCups = Math.floor(state.water / 250);
+
+    cups.innerHTML = '';
+    for (let i = 0; i < cupCount; i++) {
+        const cup = document.createElement('div');
+        cup.className = 'water-cup' + (i < filledCups ? ' filled' : '');
+        cup.innerHTML = '<span class="cup-emoji">💧</span>';
+        cup.onclick = () => {
+            if (i < filledCups) {
+                state.water = i * 250;
+            } else {
+                state.water = (i + 1) * 250;
+            }
+            saveState();
+            renderWaterTracker();
+            renderDashboard();
+        };
+        cups.appendChild(cup);
+    }
+
+    const pct = Math.min(100, (state.water / state.waterGoal) * 100);
+    document.getElementById('waterProgressBar').style.width = pct + '%';
+    document.getElementById('waterProgressText').textContent = `${state.water} / ${state.waterGoal} ml`;
+}
+
+// ========================================
+// 久坐計時器
+// ========================================
+
+const SIT_INTERVAL = 60 * 60; // 60 分鐘
+
+function toggleSitTimer() {
+    const btn = document.getElementById('sitTimerBtn');
+    if (state.sitTimerRunning) {
+        clearInterval(state.sitTimerInterval);
+        state.sitTimerRunning = false;
+        btn.textContent = '繼續計時';
+        document.getElementById('sitTimerDisplay').textContent = '已暫停';
+    } else {
+        state.sitTimerStart = state.sitTimerStart || Date.now();
+        state.sitTimerRunning = true;
+        btn.textContent = '暫停計時';
+        state.sitTimerInterval = setInterval(updateSitTimer, 1000);
+        updateSitTimer();
+    }
+}
+
+function updateSitTimer() {
+    if (!state.sitTimerRunning) return;
+    const elapsed = Math.floor((Date.now() - state.sitTimerStart) / 1000);
+    const remaining = SIT_INTERVAL - elapsed;
+
+    if (remaining <= 0) {
+        showToast('⏰ 久坐提醒！請起身活動 5 分鐘！', 'warning');
+        // 嘗試瀏覽器通知
+        if (Notification.permission === 'granted') {
+            new Notification('久坐提醒', { body: '你已經坐了 60 分鐘了，請起身活動一下！', icon: '🪑' });
+        }
+        resetSitTimer();
+        return;
+    }
+
+    const mins = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+    document.getElementById('sitTimerDisplay').textContent =
+        `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+}
+
+function resetSitTimer() {
+    clearInterval(state.sitTimerInterval);
+    state.sitTimerRunning = false;
+    state.sitTimerStart = null;
+    document.getElementById('sitTimerBtn').textContent = '開始計時';
+    document.getElementById('sitTimerDisplay').textContent = '--:--';
+}
+
+// ========================================
+// 儀表板渲染
+// ========================================
+
+function renderDashboard() {
+    const totalIntake = state.foodRecords.reduce((s, r) => s + r.calories * r.amount, 0);
+    const bmr = getBMR(state.profile);
+    const totalActivityBurn = state.activityRecords.reduce((s, r) => s + r.calories, 0);
+    const totalBurn = bmr + totalActivityBurn;
+    const balance = Math.round(totalIntake - totalBurn);
+
+    // 統計卡片
+    document.getElementById('totalIntake').textContent = Math.round(totalIntake);
+    document.getElementById('totalBurn').textContent = Math.round(totalBurn);
+    document.getElementById('calorieBalance').textContent = (balance >= 0 ? '+' : '') + balance;
+
+    const balanceCard = document.getElementById('balanceCard');
+    if (balance > 0) {
+        balanceCard.classList.remove('negative');
+    } else {
+        balanceCard.classList.add('negative');
+    }
+
+    // 熱量環
+    const intakeGoal = getDailyGoal(state.profile) || 2000;
+    const burnGoal = getDailyBurnGoal(state.profile) || 2000;
+    updateRing('intakeRing', 'intakeRingNum', 'intakeRingText', totalIntake, intakeGoal, '攝入');
+    updateRing('burnRing', 'burnRingNum', 'burnRingText', totalBurn, burnGoal, '消耗');
+    updateRing('waterRing', 'waterRingNum', 'waterRingText', state.water, state.waterGoal, '飲水');
+
+    // 個人資料摘要
+    renderProfileSummary();
+
+    // 一週趨勢圖
+    renderWeeklyChart();
+
+    // 今日建議
+    renderDailyTips(totalIntake, totalBurn, balance, intakeGoal);
+}
+
+function updateRing(ringId, numId, textId, current, goal, label) {
+    const ring = document.getElementById(ringId);
+    const numEl = document.getElementById(numId);
+    const textEl = document.getElementById(textId);
+    const circumference = 377;
+    const pct = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
+    const offset = circumference - (circumference * pct / 100);
+    ring.style.strokeDashoffset = offset;
+    numEl.textContent = Math.round(pct) + '%';
+    textEl.textContent = `${Math.round(current)} / ${Math.round(goal)} kcal`;
+}
+
+function renderProfileSummary() {
+    const container = document.getElementById('profileSummaryDashboard');
+    if (!state.profile) {
+        container.innerHTML = `
+            <div class="profile-summary">
+                <div class="profile-avatar">👤</div>
+                <div class="profile-info">
+                    <div class="profile-name">尚未設定個人資料</div>
+                    <div class="profile-detail">前往「個人設定」填寫資料以獲得個人化建議</div>
+                </div>
+                <button class="btn btn-sm btn-primary" onclick="document.querySelector('[data-section=profile]').click()">前往設定</button>
+            </div>
+        `;
+        return;
+    }
+
+    const p = state.profile;
+    const bmr = getBMR(p);
+    const tdee = getTDEE(p);
+    const goal = getDailyGoal(p);
+    const goalText = p.goal === 'lose' ? '減重' : p.goal === 'gain' ? '增重' : '維持體重';
+
+    container.innerHTML = `
+        <div class="profile-summary">
+            <div class="profile-avatar">${p.gender === 'male' ? '👨' : '👩'}</div>
+            <div class="profile-info">
+                <div class="profile-name">${p.gender === 'male' ? '男性' : '女性'} · ${p.age} 歲 · ${p.height}cm · ${p.weight}kg</div>
+                <div class="profile-detail">
+                    BMR: ${bmr} kcal | TDEE: ${tdee} kcal | 目標: ${goalText} (${goal} kcal/天)
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderWeeklyChart() {
+    const container = document.getElementById('weeklyChart');
+    const days = [];
+    const today = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const dayLabel = ['日','一','二','三','四','五','六'][d.getDay()];
+        const isToday = i === 0;
+
+        let intake, burn;
+        if (isToday) {
+            intake = state.foodRecords.reduce((s, r) => s + r.calories * r.amount, 0);
+            burn = getBMR(state.profile) + state.activityRecords.reduce((s, r) => s + r.calories, 0);
+        } else if (state.history[key]) {
+            intake = state.history[key].intake || 0;
+            burn = state.history[key].burn || 0;
+        } else {
+            intake = 0;
+            burn = 0;
+        }
+
+        days.push({ label: dayLabel, intake, burn, isToday });
+    }
+
+    const maxVal = Math.max(...days.map(d => Math.max(d.intake, d.burn)), 2000);
+
+    container.innerHTML = days.map(d => {
+        const intakeH = (d.intake / maxVal) * 100;
+        const burnH = (d.burn / maxVal) * 100;
+        return `
+            <div class="bar-group">
+                <div class="bar-stack">
+                    <div class="bar intake-bar" style="height:${intakeH}%;" title="攝入: ${Math.round(d.intake)} kcal"></div>
+                    <div class="bar burn-bar" style="height:${burnH}%;" title="消耗: ${Math.round(d.burn)} kcal"></div>
+                </div>
+                <div class="bar-label" style="${d.isToday ? 'font-weight:700; color:var(--primary);' : ''}">${d.label}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderDailyTips(intake, burn, balance, goal) {
+    const tips = [];
+
+    if (goal > 0) {
+        if (intake > goal * 1.1) {
+            tips.push({ icon: '⚠️', text: `今日攝入熱量已超出目標 ${Math.round(intake - goal)} kcal，建議減少高熱量食物攝入。` });
+        } else if (intake < goal * 0.6 && intake > 0) {
+            tips.push({ icon: '📉', text: `今日攝入熱量偏低，僅達目標的 ${Math.round(intake/goal*100)}%，請確保攝取足夠營養。` });
+        } else if (intake > 0) {
+            tips.push({ icon: '✅', text: `今日攝入熱量在目標範圍內，保持下去！` });
+        }
+    }
+
+    if (balance > 500) {
+        tips.push({ icon: '🔴', text: `今日熱量盈餘 ${balance} kcal，長期過量攝入會導致體重增加。` });
+    } else if (balance < -500) {
+        tips.push({ icon: '🟡', text: `今日熱量赤字 ${Math.abs(balance)} kcal，適度赤字有助於減重，但請注意不要過度節食。` });
+    }
+
+    if (state.water < state.waterGoal * 0.5 && new Date().getHours() > 12) {
+        tips.push({ icon: '💧', text: `今日飲水量僅 ${state.water}ml，低於目標的 50%，請多補充水分！` });
+    }
+
+    if (state.activityRecords.length === 0 && new Date().getHours() > 15) {
+        tips.push({ icon: '🏃', text: `今日尚未記錄任何運動，建議安排 30 分鐘以上的身體活動。` });
+    }
+
+    if (state.activityRecords.length > 0) {
+        const totalActivityBurn = state.activityRecords.reduce((s, r) => s + r.calories, 0);
+        if (totalActivityBurn > 300) {
+            tips.push({ icon: '🎉', text: `今日已消耗 ${totalActivityBurn} kcal 運動熱量，做得好！` });
+        }
+    }
+
+    // 隨機健康小貼士
+    const randomTip = HEALTH_TIPS[Math.floor(Math.random() * HEALTH_TIPS.length)];
+    tips.push(randomTip);
+
+    if (tips.length === 0) {
+        tips.push({ icon: '🌟', text: '開始記錄你的飲食和運動，獲取個人化健康建議！' });
+    }
+
+    document.getElementById('dailyTips').innerHTML = tips.map(t => `
+        <li>
+            <span class="tip-icon">${t.icon}</span>
+            <span class="tip-text">${t.text}</span>
+        </li>
+    `).join('');
+}
+
+// ========================================
+// 健康提醒
+// ========================================
+
+function renderReminders() {
+    renderWaterTracker();
+    renderReminderCards();
+    renderHealthTips();
+}
+
+function renderReminderCards() {
+    const grid = document.getElementById('reminderGrid');
+    const hour = new Date().getHours();
+    const totalIntake = state.foodRecords.reduce((s, r) => s + r.calories * r.amount, 0);
+    const goal = getDailyGoal(state.profile) || 2000;
+    const totalActivityBurn = state.activityRecords.reduce((s, r) => s + r.calories, 0);
+
+    const reminders = [];
+
+    // 飲水提醒
+    const waterPct = (state.water / state.waterGoal) * 100;
+    let waterStatus, waterStatusClass;
+    if (waterPct >= 100) { waterStatus = '已達標'; waterStatusClass = 'good'; }
+    else if (waterPct >= 60) { waterStatus = '進度良好'; waterStatusClass = 'good'; }
+    else if (waterPct >= 30) { waterStatus = '需補充'; waterStatusClass = 'warning'; }
+    else { waterStatus = '嚴重不足'; waterStatusClass = 'danger'; }
+
+    reminders.push({
+        type: 'water',
+        icon: '💧',
+        title: '飲水提醒',
+        text: `今日已飲水 ${state.water}ml，目標 ${state.waterGoal}ml。${waterPct >= 100 ? '已達成今日飲水目標！' : '請定時補充水分，不要等到口渴才喝。'}`,
+        status: waterStatus,
+        statusClass: waterStatusClass,
+    });
+
+    // 用餐提醒
+    let mealReminder = '';
+    let mealStatus = '正常';
+    let mealStatusClass = 'good';
+    if (hour < 9) { mealReminder = '早餐時間！建議攝取富含蛋白質和膳食纖維的早餐。'; }
+    else if (hour >= 9 && hour < 12) { mealReminder = '上午茶時間，可適量補充水果或堅果。'; }
+    else if (hour >= 12 && hour < 14) { mealReminder = '午餐時間！注意均衡飲食，多吃蔬菜。'; }
+    else if (hour >= 14 && hour < 18) {
+        mealReminder = '下午茶時間，避免高糖零食。';
+        if (totalIntake < goal * 0.4) { mealStatus = '攝入不足'; mealStatusClass = 'warning'; }
+    }
+    else if (hour >= 18 && hour < 21) {
+        mealReminder = '晚餐時間！建議清淡飲食，睡前 3 小時不宜進食。';
+        if (totalIntake < goal * 0.6) { mealStatus = '攝入不足'; mealStatusClass = 'warning'; }
+    }
+    else {
+        mealReminder = '睡前不宜進食，如需補充可選擇溫牛奶或少數堅果。';
+        if (totalIntake > goal * 1.2) { mealStatus = '攝入過量'; mealStatusClass = 'danger'; }
+    }
+
+    reminders.push({
+        type: 'meal',
+        icon: '🍽️',
+        title: '用餐提醒',
+        text: mealReminder,
+        status: mealStatus,
+        statusClass: mealStatusClass,
+    });
+
+    // 運動提醒
+    let exerciseText, exerciseStatus, exerciseStatusClass;
+    if (totalActivityBurn >= 300) {
+        exerciseText = `今日已運動消耗 ${totalActivityBurn} kcal，表現優異！記得做伸展放鬆。`;
+        exerciseStatus = '已達標';
+        exerciseStatusClass = 'good';
+    } else if (totalActivityBurn > 0) {
+        exerciseText = `今日已運動消耗 ${totalActivityBurn} kcal，建議再增加一些運動量，目標 300 kcal。`;
+        exerciseStatus = '進行中';
+        exerciseStatusClass = 'warning';
+    } else if (hour < 10) {
+        exerciseText = '新的一天開始了！建議安排 30 分鐘以上的運動。';
+        exerciseStatus = '待開始';
+        exerciseStatusClass = 'warning';
+    } else if (hour < 17) {
+        exerciseText = '今日尚未運動，建議利用空檔時間進行快走或伸展。';
+        exerciseStatus = '需運動';
+        exerciseStatusClass = 'danger';
+    } else {
+        exerciseText = '今日尚未運動，晚上可進行瑜伽或散步等輕度活動。';
+        exerciseStatus = '需運動';
+        exerciseStatusClass = 'danger';
+    }
+
+    reminders.push({
+        type: 'exercise',
+        icon: '🏃',
+        title: '運動提醒',
+        text: exerciseText,
+        status: exerciseStatus,
+        statusClass: exerciseStatusClass,
+    });
+
+    // 睡眠提醒
+    let sleepText, sleepStatus, sleepStatusClass;
+    if (hour >= 22 || hour < 5) {
+        sleepText = '該睡覺了！建議在 23:00 前入睡，確保 7-9 小時的優質睡眠。';
+        sleepStatus = '就寢時間';
+        sleepStatusClass = 'warning';
+    } else if (hour >= 21) {
+        sleepText = '距離理想就寢時間還有 1-2 小時，開始準備放鬆入睡。';
+        sleepStatus = '準備中';
+        sleepStatusClass = 'good';
+    } else if (hour >= 6 && hour < 9) {
+        sleepText = '早安！昨晚睡得好嗎？規律作息有助於維持健康代謝。';
+        sleepStatus = '良好';
+        sleepStatusClass = 'good';
+    } else {
+        sleepText = '維持規律的睡眠時間表，每日固定時間上床和起床。';
+        sleepStatus = '正常';
+        sleepStatusClass = 'good';
+    }
+
+    reminders.push({
+        type: 'sleep',
+        icon: '😴',
+        title: '睡眠提醒',
+        text: sleepText,
+        status: sleepStatus,
+        statusClass: sleepStatusClass,
+    });
+
+    // 久坐姿勢提醒
+    reminders.push({
+        type: 'posture',
+        icon: '🪑',
+        title: '姿勢與久坐提醒',
+        text: '每 60 分鐘起身活動 5 分鐘，注意坐姿端正，避免彎腰駝背。可做頸部伸展和眼部休息（20-20-20 法則）。',
+        status: '進行中',
+        statusClass: 'good',
+    });
+
+    // 心理健康提醒
+    reminders.push({
+        type: 'mental',
+        icon: '🧘',
+        title: '心理健康提醒',
+        text: '花 5 分鐘做深呼吸或冥想。保持正向心態，適度社交，感到壓力時可散步或聽音樂放鬆。',
+        status: '每日關注',
+        statusClass: 'good',
+    });
+
+    grid.innerHTML = reminders.map(r => `
+        <div class="reminder-card ${r.type}">
+            <div class="reminder-header">
+                <span class="reminder-icon">${r.icon}</span>
+                <span class="reminder-title">${r.title}</span>
+            </div>
+            <div class="reminder-text">${r.text}</div>
+            <div class="reminder-status">
+                <span class="status-badge ${r.statusClass}">${r.status}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderHealthTips() {
+    document.getElementById('healthTips').innerHTML = HEALTH_TIPS.map(t => `
+        <li>
+            <span class="tip-icon">${t.icon}</span>
+            <span class="tip-text">${t.text}</span>
+        </li>
+    `).join('');
+}
+
+// ========================================
+// 個人資料
+// ========================================
+
+function renderProfile() {
+    if (state.profile) {
+        const p = state.profile;
+        document.getElementById('profileGender').value = p.gender || 'male';
+        document.getElementById('profileAge').value = p.age || '';
+        document.getElementById('profileHeight').value = p.height || '';
+        document.getElementById('profileWeight').value = p.weight || '';
+        document.getElementById('profileActivity').value = p.activity || '1.2';
+        document.getElementById('profileGoal').value = p.goal || 'maintain';
+        renderBMRResult();
+    }
+}
+
+function saveProfile() {
+    const gender = document.getElementById('profileGender').value;
+    const age = parseInt(document.getElementById('profileAge').value);
+    const height = parseFloat(document.getElementById('profileHeight').value);
+    const weight = parseFloat(document.getElementById('profileWeight').value);
+    const activity = parseFloat(document.getElementById('profileActivity').value);
+    const goal = document.getElementById('profileGoal').value;
+
+    if (!age || !height || !weight) {
+        showToast('請填寫完整的個人資料', 'warning');
+        return;
+    }
+
+    state.profile = { gender, age, height, weight, activity, goal };
+
+    // 更新飲水目標
+    state.waterGoal = Math.round(weight * 30);
+
+    saveState();
+    renderBMRResult();
+    renderDashboard();
+    showToast('個人資料已儲存！', 'success');
+}
+
+function renderBMRResult() {
+    const card = document.getElementById('bmrResultCard');
+    const content = document.getElementById('bmrResultContent');
+    const p = state.profile;
+
+    if (!p) {
+        card.style.display = 'none';
+        return;
+    }
+
+    const bmr = getBMR(p);
+    const tdee = getTDEE(p);
+    const goal = getDailyGoal(p);
+    const bmi = (p.weight / Math.pow(p.height/100, 2)).toFixed(1);
+    const bmiNum = parseFloat(bmi);
+    let bmiCategory, bmiColor;
+    if (bmiNum < 18.5) { bmiCategory = '體重過輕'; bmiColor = 'var(--info)'; }
+    else if (bmiNum < 24) { bmiCategory = '健康範圍'; bmiColor = 'var(--primary)'; }
+    else if (bmiNum < 27) { bmiCategory = '過重'; bmiColor = 'var(--warning)'; }
+    else { bmiCategory = '肥胖'; bmiColor = 'var(--danger)'; }
+
+    const goalText = p.goal === 'lose' ? '減重' : p.goal === 'gain' ? '增重' : '維持體重';
+
+    card.style.display = 'block';
+    content.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:16px; margin-bottom:16px;">
+            <div style="text-align:center; padding:16px; background:#f8fafc; border-radius:12px;">
+                <div style="font-size:0.8rem; color:var(--text-light);">BMI</div>
+                <div style="font-size:1.6rem; font-weight:800; color:${bmiColor};">${bmi}</div>
+                <div style="font-size:0.75rem; color:${bmiColor};">${bmiCategory}</div>
+            </div>
+            <div style="text-align:center; padding:16px; background:#f8fafc; border-radius:12px;">
+                <div style="font-size:0.8rem; color:var(--text-light);">BMR 基礎代謝</div>
+                <div style="font-size:1.6rem; font-weight:800; color:var(--primary);">${bmr}</div>
+                <div style="font-size:0.75rem; color:var(--text-light);">kcal/天</div>
+            </div>
+            <div style="text-align:center; padding:16px; background:#f8fafc; border-radius:12px;">
+                <div style="font-size:0.8rem; color:var(--text-light);">TDEE 每日消耗</div>
+                <div style="font-size:1.6rem; font-weight:800; color:var(--info);">${tdee}</div>
+                <div style="font-size:0.75rem; color:var(--text-light);">kcal/天</div>
+            </div>
+            <div style="text-align:center; padding:16px; background:#f8fafc; border-radius:12px;">
+                <div style="font-size:0.8rem; color:var(--text-light);">每日建議攝入</div>
+                <div style="font-size:1.6rem; font-weight:800; color:var(--accent);">${goal}</div>
+                <div style="font-size:0.75rem; color:var(--text-light);">kcal/天 (${goalText})</div>
+            </div>
+        </div>
+        <div style="padding:12px 16px; background:#e8f8f0; border-radius:10px; font-size:0.85rem; color:var(--text);">
+            💡 <strong>BMI</strong> = 體重(kg) ÷ 身高(m)²　|　<strong>BMR</strong> 使用 Mifflin-St Jeor 公式　|　<strong>TDEE</strong> = BMR × 活動量係數
+        </div>
+    `;
+}
+
+function confirmClearData() {
+    showConfirm('清除所有資料', '確定要清除所有資料嗎？此操作無法復原。', () => {
+        localStorage.removeItem(STORAGE_KEY);
+        state = {
+            profile: null,
+            foodRecords: [],
+            activityRecords: [],
+            water: 0,
+            waterGoal: 2000,
+            history: {},
+            sitTimerRunning: false,
+            sitTimerStart: null,
+            sitTimerInterval: null,
+        };
+        renderDashboard();
+        renderFoodList();
+        renderActivityList();
+        renderWaterTracker();
+        renderReminders();
+        renderProfile();
+        showToast('所有資料已清除', 'info');
+    });
+}
+
+// ========================================
+// 初始化
+// ========================================
+
+function init() {
+    // 顯示日期
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('zh-HK', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+    document.getElementById('navDate').textContent = dateStr;
+
+    // 載入資料
+    loadState();
+
+    // 渲染各區域
+    renderFoodQuickSelect();
+    renderActivityQuickSelect();
+    renderFoodList();
+    renderActivityList();
+    renderWaterTracker();
+    renderDashboard();
+
+    // 請求通知權限
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
+    // 每分鐘更新提醒
+    setInterval(() => {
+        const activeSection = document.querySelector('.section.active').id;
+        if (activeSection === 'section-reminders') {
+            renderReminderCards();
+        }
+    }, 60000);
+}
+
+// Enter 鍵提交
+document.getElementById('foodName').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') addFood();
+});
+document.getElementById('activityName').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') addActivity();
+});
+
+// 啟動
+init();
+</script>
+
+</body>
+</html>
