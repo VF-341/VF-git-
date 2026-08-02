@@ -13,21 +13,26 @@
         }
 
         :root {
-            --primary: #2ecc71;
-            --primary-dark: #27ae60;
-            --primary-light: #a9dfbf;
-            --accent: #e67e22;
-            --accent-dark: #d35400;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --info: #3498db;
-            --bg: #f0f4f8;
-            --card-bg: #ffffff;
-            --text: #2c3e50;
-            --text-light: #7f8c8d;
-            --border: #e0e6ed;
-            --shadow: 0 2px 16px rgba(0,0,0,0.08);
-            --shadow-hover: 0 4px 24px rgba(0,0,0,0.12);
+            --primary: #00d97e;
+            --primary-dark: #00b86b;
+            --primary-light: #0ee68a;
+            --accent: #ff8c42;
+            --accent-dark: #e6761f;
+            --danger: #ff5757;
+            --warning: #ffb340;
+            --info: #4dabf7;
+            --bg: #0d1117;
+            --bg-secondary: #161b22;
+            --card-bg: #161b22;
+            --card-bg-hover: #1c2330;
+            --text: #e6edf3;
+            --text-light: #8b949e;
+            --border: #30363d;
+            --border-light: #21262d;
+            --shadow: 0 2px 16px rgba(0,0,0,0.4);
+            --shadow-hover: 0 4px 24px rgba(0,0,0,0.5);
+            --glow-primary: 0 0 20px rgba(0, 217, 126, 0.15);
+            --glow-accent: 0 0 20px rgba(255, 140, 66, 0.15);
             --radius: 16px;
             --radius-sm: 10px;
         }
@@ -38,11 +43,14 @@
             color: var(--text);
             line-height: 1.6;
             min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 0%, rgba(0, 217, 126, 0.04) 0%, transparent 50%),
+                radial-gradient(circle at 80% 100%, rgba(77, 171, 247, 0.04) 0%, transparent 50%);
         }
 
         /* ===== 頂部導航 ===== */
         .navbar {
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            background: linear-gradient(135deg, #0d1117, #161b22);
             color: white;
             padding: 0 24px;
             height: 64px;
@@ -52,7 +60,9 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 2px 12px rgba(46, 204, 113, 0.3);
+            box-shadow: 0 1px 0 var(--border), 0 4px 20px rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
         }
 
         .navbar .logo {
@@ -73,7 +83,7 @@
         }
 
         .nav-links a {
-            color: rgba(255,255,255,0.85);
+            color: var(--text-light);
             text-decoration: none;
             padding: 8px 16px;
             border-radius: 8px;
@@ -84,13 +94,13 @@
         }
 
         .nav-links a:hover {
-            background: rgba(255,255,255,0.15);
-            color: white;
+            background: var(--border-light);
+            color: var(--text);
         }
 
         .nav-links a.active {
-            background: rgba(255,255,255,0.2);
-            color: white;
+            background: rgba(0, 217, 126, 0.15);
+            color: var(--primary);
         }
 
         .nav-date {
@@ -110,7 +120,7 @@
         }
 
         .lang-btn {
-            background: rgba(255,255,255,0.15);
+            background: var(--border-light);
             border: none;
             color: white;
             padding: 6px 12px;
@@ -126,7 +136,7 @@
         }
 
         .lang-btn:hover {
-            background: rgba(255,255,255,0.25);
+            background: var(--border);
         }
 
         .lang-dropdown {
@@ -135,9 +145,10 @@
             top: 100%;
             right: 0;
             margin-top: 6px;
-            background: white;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             overflow: hidden;
             z-index: 300;
             min-width: 140px;
@@ -160,12 +171,12 @@
         }
 
         .lang-option:hover {
-            background: #f0f4f8;
+            background: var(--border-light);
         }
 
         .lang-option.active {
-            background: #e8f8f0;
-            color: var(--primary-dark);
+            background: rgba(0, 217, 126, 0.15);
+            color: var(--primary);
             font-weight: 700;
         }
 
@@ -206,6 +217,11 @@
 
         .card:hover {
             box-shadow: var(--shadow-hover);
+            border-color: var(--border);
+        }
+
+        .card {
+            border: 1px solid var(--border-light);
         }
 
         .card-title {
@@ -361,13 +377,15 @@
             font-size: 0.95rem;
             font-family: inherit;
             transition: border-color 0.2s;
-            background: white;
+            background: var(--bg-secondary);
+            color: var(--text);
         }
 
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
             border-color: var(--primary);
+            box-shadow: var(--glow-primary);
         }
 
         .form-row {
@@ -455,7 +473,7 @@
             padding: 12px 16px;
             border-radius: var(--radius-sm);
             margin-bottom: 8px;
-            background: #f8fafc;
+            background: var(--border-light);
             transition: background 0.2s;
             animation: slideIn 0.3s ease;
         }
@@ -466,7 +484,7 @@
         }
 
         .record-item:hover {
-            background: #eef2f7;
+            background: var(--card-bg-hover);
         }
 
         .record-item .record-info {
@@ -511,7 +529,7 @@
 
         .record-item .delete-btn:hover {
             color: var(--danger);
-            background: rgba(231, 76, 60, 0.1);
+            background: rgba(255, 87, 87, 0.1);
         }
 
         .record-item .record-thumb {
@@ -543,7 +561,7 @@
 
         /* ===== 進度條 ===== */
         .progress-bar-container {
-            background: #e8ecf1;
+            background: var(--border-light);
             border-radius: 20px;
             height: 12px;
             overflow: hidden;
@@ -562,7 +580,7 @@
         }
 
         .progress-bar-fill.water {
-            background: linear-gradient(90deg, var(--info), #5dade2);
+            background: linear-gradient(90deg, var(--info), #7bc8f7);
         }
 
         .progress-label {
@@ -596,10 +614,10 @@
 
         .reminder-card.water { border-left-color: var(--info); }
         .reminder-card.exercise { border-left-color: var(--accent); }
-        .reminder-card.sleep { border-left-color: #8e44ad; }
+        .reminder-card.sleep { border-left-color: #a855f7; }
         .reminder-card.meal { border-left-color: var(--warning); }
-        .reminder-card.posture { border-left-color: #1abc9c; }
-        .reminder-card.mental { border-left-color: #e74c3c; }
+        .reminder-card.posture { border-left-color: #2dd4bf; }
+        .reminder-card.mental { border-left-color: #ff5757; }
 
         .reminder-card .reminder-header {
             display: flex;
@@ -637,9 +655,9 @@
             font-weight: 600;
         }
 
-        .status-badge.good { background: #e8f8f0; color: var(--primary-dark); }
-        .status-badge.warning { background: #fef5e7; color: var(--warning); }
-        .status-badge.danger { background: #fdedec; color: var(--danger); }
+        .status-badge.good { background: rgba(0, 217, 126, 0.15); color: var(--primary); }
+        .status-badge.warning { background: rgba(255, 179, 64, 0.15); color: var(--warning); }
+        .status-badge.danger { background: rgba(255, 87, 87, 0.15); color: var(--danger); }
 
         /* ===== 快速選擇 ===== */
         .quick-select {
@@ -650,7 +668,7 @@
         }
 
         .quick-chip {
-            background: #f0f4f8;
+            background: var(--border-light);
             border: 2px solid transparent;
             padding: 8px 14px;
             border-radius: 20px;
@@ -662,7 +680,7 @@
 
         .quick-chip:hover {
             border-color: var(--accent);
-            background: #fef5e7;
+            background: rgba(255, 140, 66, 0.15);
         }
 
         .quick-chip .chip-cal {
@@ -673,7 +691,7 @@
 
         .quick-chip.activity:hover {
             border-color: var(--info);
-            background: #ebf5fb;
+            background: rgba(77, 171, 247, 0.15);
         }
 
         /* ===== 個人資料 ===== */
@@ -682,7 +700,7 @@
             align-items: center;
             gap: 16px;
             padding: 16px;
-            background: linear-gradient(135deg, #e8f8f0, #f0f4f8);
+            background: linear-gradient(135deg, rgba(0, 217, 126, 0.1), var(--border-light));
             border-radius: var(--radius);
             margin-bottom: 20px;
         }
@@ -725,7 +743,8 @@
             background: var(--card-bg);
             border-radius: var(--radius-sm);
             padding: 14px 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -787,7 +806,7 @@
             left: 0;
             right: 0;
             height: 0%;
-            background: linear-gradient(180deg, #5dade2, var(--info));
+            background: linear-gradient(180deg, #7bc8f7, var(--info));
             transition: height 0.3s ease;
         }
 
@@ -852,11 +871,11 @@
         }
 
         .bar.intake-bar {
-            background: linear-gradient(180deg, var(--accent), #f0c36d);
+            background: linear-gradient(180deg, var(--accent), #ffb380);
         }
 
         .bar.burn-bar {
-            background: linear-gradient(180deg, var(--info), #5dade2);
+            background: linear-gradient(180deg, var(--info), #7bc8f7);
         }
 
         .bar-label {
@@ -893,7 +912,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.6);
             z-index: 200;
             align-items: center;
             justify-content: center;
@@ -911,7 +930,7 @@
             padding: 28px;
             max-width: 500px;
             width: 90%;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6);
             animation: modalIn 0.3s ease;
         }
 
@@ -957,12 +976,12 @@
             transition: all 0.2s;
             position: relative;
             overflow: hidden;
-            background: #f8fafc;
+            background: var(--bg-secondary);
         }
 
         .photo-slot:hover {
             border-color: var(--accent);
-            background: #fef5e7;
+            background: rgba(255, 140, 66, 0.08);
         }
 
         .photo-slot.has-photo {
@@ -994,7 +1013,7 @@
             position: absolute;
             top: 4px;
             right: 4px;
-            background: rgba(231, 76, 60, 0.9);
+            background: rgba(255, 87, 87, 0.9);
             color: white;
             border: none;
             border-radius: 50%;
@@ -1032,7 +1051,8 @@
             padding: 6px 14px;
             border: 2px solid var(--border);
             border-radius: 8px;
-            background: white;
+            background: var(--bg-secondary);
+            color: var(--text);
             cursor: pointer;
             font-size: 0.8rem;
             font-weight: 600;
@@ -1045,13 +1065,13 @@
         .photo-action-btn.camera:hover {
             border-color: var(--accent);
             color: var(--accent);
-            background: #fef5e7;
+            background: rgba(255, 140, 66, 0.12);
         }
 
         .photo-action-btn.upload:hover {
             border-color: var(--info);
             color: var(--info);
-            background: #ebf5fb;
+            background: rgba(77, 171, 247, 0.12);
         }
 
         /* ===== 相機 Modal ===== */
@@ -1108,7 +1128,7 @@
         }
 
         .camera-switch-btn {
-            background: rgba(255,255,255,0.2);
+            background: var(--border);
             border: none;
             color: white;
             width: 44px;
@@ -1133,7 +1153,7 @@
 
         /* ===== 天氣資訊 ===== */
         .weather-widget {
-            background: linear-gradient(135deg, #ebf5fb, #d4eef9);
+            background: linear-gradient(135deg, rgba(77, 171, 247, 0.12), rgba(77, 171, 247, 0.06));
             border-radius: var(--radius-sm);
             padding: 14px;
             display: flex;
@@ -1162,7 +1182,7 @@
         }
 
         .weather-widget .weather-refresh {
-            background: white;
+            background: var(--bg-secondary);
             border: 2px solid var(--border);
             border-radius: 8px;
             padding: 6px 10px;
@@ -1186,8 +1206,8 @@
             gap: 6px;
         }
 
-        .weather-impact.boost { background: #fef5e7; color: var(--accent-dark); }
-        .weather-impact.normal { background: #e8f8f0; color: var(--primary-dark); }
+        .weather-impact.boost { background: rgba(255, 140, 66, 0.15); color: var(--accent); }
+        .weather-impact.normal { background: rgba(0, 217, 126, 0.12); color: var(--primary); }
 
         /* ===== 配速選擇器 ===== */
         .pace-selector {
@@ -1231,8 +1251,8 @@
         }
 
         .pace-preset {
-            background: #ebf5fb;
-            border: 1px solid #bde0f5;
+            background: rgba(77, 171, 247, 0.12);
+            border: 1px solid rgba(77, 171, 247, 0.3);
             padding: 4px 10px;
             border-radius: 16px;
             font-size: 0.75rem;
@@ -1253,7 +1273,7 @@
 
         /* ===== 計算結果預覽 ===== */
         .calc-preview {
-            background: linear-gradient(135deg, #e8f8f0, #f0f4f8);
+            background: linear-gradient(135deg, rgba(0, 217, 126, 0.08), var(--border-light));
             border-radius: var(--radius-sm);
             padding: 14px;
             margin-top: 14px;
@@ -1298,6 +1318,7 @@
         .tips-list .tip-icon {
             font-size: 1.1rem;
             flex-shrink: 0;
+            color: var(--text-light);
         }
 
         .tips-list .tip-text {
@@ -1334,6 +1355,7 @@
 
         .section-header {
             margin-bottom: 20px;
+            color: var(--text);
         }
 
         .section-header h2 {
@@ -1352,7 +1374,7 @@
 
         .divider {
             border: none;
-            border-top: 1px solid var(--border);
+            border-top: 1px solid var(--border-light);
             margin: 16px 0;
         }
 
@@ -1452,11 +1474,11 @@
                 <div class="ring-outer">
                     <div class="ring-wrapper">
                         <svg width="140" height="140">
-                            <circle cx="70" cy="70" r="60" fill="none" stroke="#e8ecf1" stroke-width="12"/>
-                            <circle id="intakeRing" cx="70" cy="70" r="60" fill="none" stroke="#e67e22" stroke-width="12" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377" style="transition: stroke-dashoffset 0.6s ease;"/>
+                            <circle cx="70" cy="70" r="60" fill="none" stroke="#21262d" stroke-width="12"/>
+                            <circle id="intakeRing" cx="70" cy="70" r="60" fill="none" stroke="#ff8c42" stroke-width="12" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377" style="transition: stroke-dashoffset 0.6s ease;"/>
                         </svg>
                         <div class="ring-center" style="transform: translate(-50%,-50%);">
-                            <div class="num" id="intakeRingNum" style="color:#e67e22;">0%</div>
+                            <div class="num" id="intakeRingNum" style="color:#ff8c42;">0%</div>
                             <div class="lbl" data-i18n="intakeAchieved">攝入達成</div>
                         </div>
                     </div>
@@ -1467,11 +1489,11 @@
                 <div class="ring-outer">
                     <div class="ring-wrapper">
                         <svg width="140" height="140">
-                            <circle cx="70" cy="70" r="60" fill="none" stroke="#e8ecf1" stroke-width="12"/>
-                            <circle id="burnRing" cx="70" cy="70" r="60" fill="none" stroke="#3498db" stroke-width="12" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377" style="transition: stroke-dashoffset 0.6s ease;"/>
+                            <circle cx="70" cy="70" r="60" fill="none" stroke="#21262d" stroke-width="12"/>
+                            <circle id="burnRing" cx="70" cy="70" r="60" fill="none" stroke="#4dabf7" stroke-width="12" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377" style="transition: stroke-dashoffset 0.6s ease;"/>
                         </svg>
                         <div class="ring-center" style="transform: translate(-50%,-50%);">
-                            <div class="num" id="burnRingNum" style="color:#3498db;">0%</div>
+                            <div class="num" id="burnRingNum" style="color:#4dabf7;">0%</div>
                             <div class="lbl" data-i18n="burnAchieved">消耗達成</div>
                         </div>
                     </div>
@@ -1482,11 +1504,11 @@
                 <div class="ring-outer">
                     <div class="ring-wrapper">
                         <svg width="140" height="140">
-                            <circle cx="70" cy="70" r="60" fill="none" stroke="#e8ecf1" stroke-width="12"/>
-                            <circle id="waterRing" cx="70" cy="70" r="60" fill="none" stroke="#3498db" stroke-width="12" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377" style="transition: stroke-dashoffset 0.6s ease;"/>
+                            <circle cx="70" cy="70" r="60" fill="none" stroke="#21262d" stroke-width="12"/>
+                            <circle id="waterRing" cx="70" cy="70" r="60" fill="none" stroke="#4dabf7" stroke-width="12" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377" style="transition: stroke-dashoffset 0.6s ease;"/>
                         </svg>
                         <div class="ring-center" style="transform: translate(-50%,-50%);">
-                            <div class="num" id="waterRingNum" style="color:#3498db;">0%</div>
+                            <div class="num" id="waterRingNum" style="color:#4dabf7;">0%</div>
                             <div class="lbl" data-i18n="waterAchieved">飲水達成</div>
                         </div>
                     </div>
@@ -1501,8 +1523,8 @@
             <div class="chart-container">
                 <div class="bar-chart" id="weeklyChart"></div>
                 <div class="chart-legend">
-                    <div class="legend-item"><div class="legend-dot" style="background:#e67e22;"></div> <span data-i18n="legendIntake">攝入熱量</span></div>
-                    <div class="legend-item"><div class="legend-dot" style="background:#3498db;"></div> <span data-i18n="legendBurn">消耗熱量</span></div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#ff8c42;"></div> <span data-i18n="legendIntake">攝入熱量</span></div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#4dabf7;"></div> <span data-i18n="legendBurn">消耗熱量</span></div>
                 </div>
             </div>
         </div>
@@ -4310,28 +4332,28 @@ function renderBMRResult() {
     card.style.display = 'block';
     content.innerHTML = `
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:16px; margin-bottom:16px;">
-            <div style="text-align:center; padding:16px; background:#f8fafc; border-radius:12px;">
+            <div style="text-align:center; padding:16px; background:var(--border-light); border-radius:12px;">
                 <div style="font-size:0.8rem; color:var(--text-light);">BMI</div>
                 <div style="font-size:1.6rem; font-weight:800; color:${bmiColor};">${bmi}</div>
                 <div style="font-size:0.75rem; color:${bmiColor};">${bmiCategory}</div>
             </div>
-            <div style="text-align:center; padding:16px; background:#f8fafc; border-radius:12px;">
+            <div style="text-align:center; padding:16px; background:var(--border-light); border-radius:12px;">
                 <div style="font-size:0.8rem; color:var(--text-light);">BMR 基礎代謝</div>
                 <div style="font-size:1.6rem; font-weight:800; color:var(--primary);">${bmr}</div>
                 <div style="font-size:0.75rem; color:var(--text-light);">kcal/天</div>
             </div>
-            <div style="text-align:center; padding:16px; background:#f8fafc; border-radius:12px;">
+            <div style="text-align:center; padding:16px; background:var(--border-light); border-radius:12px;">
                 <div style="font-size:0.8rem; color:var(--text-light);">TDEE 每日消耗</div>
                 <div style="font-size:1.6rem; font-weight:800; color:var(--info);">${tdee}</div>
                 <div style="font-size:0.75rem; color:var(--text-light);">kcal/天</div>
             </div>
-            <div style="text-align:center; padding:16px; background:#f8fafc; border-radius:12px;">
+            <div style="text-align:center; padding:16px; background:var(--border-light); border-radius:12px;">
                 <div style="font-size:0.8rem; color:var(--text-light);">每日建議攝入</div>
                 <div style="font-size:1.6rem; font-weight:800; color:var(--accent);">${goal}</div>
                 <div style="font-size:0.75rem; color:var(--text-light);">kcal/天 (${goalText})</div>
             </div>
         </div>
-        <div style="padding:12px 16px; background:#e8f8f0; border-radius:10px; font-size:0.85rem; color:var(--text);">
+        <div style="padding:12px 16px; background:rgba(0, 217, 126, 0.08); border-radius:10px; font-size:0.85rem; color:var(--text);">
             💡 <strong>BMI</strong> = 體重(kg) ÷ 身高(m)²　|　<strong>BMR</strong> 使用 Mifflin-St Jeor 公式　|　<strong>TDEE</strong> = BMR × 活動量係數
         </div>
     `;
